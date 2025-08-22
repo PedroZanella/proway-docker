@@ -1,61 +1,61 @@
 #!/bin/bash
 
-# Define o diretório onde o repositório será clonado.
+# Directory where the repository will be cloned.
 REPO_DIR="/home/aluno/proway-docker/proway-docker"
 
-# URL do seu repositório Git.
-REPO_URL="<https://github.com/PedroZanella/proway-docker.git>"
+# URL of the Git repository.
+REPO_URL="https://github.com/PedroZanella/proway-docker.git"
 
-#Instalação do Docker e plugins necessários
-
-echo "Verificando e instalando o Docker"
-
+# Docker and necessary plugins installation
+echo "Checking and installing Docker"
 if ! command -v docker &> /dev/null; then
     sudo apt-get update
     sudo apt-get install -y \
         ca-certificates \
+        curl \
+        gnupg \
+        lsb-release \
         docker-compose-plugin
 
+    # Add the official Docker GPG key (ESSENTIAL)
     sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
     echo \
       "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
       $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     sudo apt-get update
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
-    # Adiciona o usuário atual ao grupo "docker" para não precisar de sudo.
+    # Add the current user to the "docker" group to avoid using sudo.
     sudo usermod -aG docker $USER
-    echo "Docker instalado com sucesso! A sessão pode precisar ser reiniciada para que as alterações no grupo 'docker' entrem em vigor."
+    echo "Docker installed successfully! The session needs to be restarted or 'newgrp docker' executed for changes to take effect."
 else
-    echo "Docker já está instalado."
+    echo "Docker is already installed."
 fi
 
-# Git Pull ou Clone do Repositório 
-
-echo "Atualizando ou clonando o repositório Git..."
+# Git Pull or Clone the Repository
+echo "Updating or cloning the Git repository..."
 if [ -d "$REPO_DIR" ]; then
-    echo "Diretório do repositório já existe. Realizando 'git pull'..."
+    echo "Repository directory already exists. Performing 'git pull'..."
     cd "$REPO_DIR"
     git pull
 else
-    echo "Diretório não encontrado. Clonando o repositório..."
+    echo "Directory not found. Cloning the repository..."
     git clone "$REPO_URL" "$REPO_DIR"
     cd "$REPO_DIR"
 fi
 
-# Deploy com Docker Compose ---
-
-echo "Iniciando o deploy com Docker Compose..."
-# 'docker compose up' com --build força a reconstrução das imagens.
-# '--force-recreate' força a recriação dos containers, garantindo o deploy de novas versões.
-# '-d' executa em modo detached (segundo plano).
+# Docker Compose Deploy
+echo "Starting Docker Compose deployment"
+# Navigate to the project folder (the path is now complete)
 cd "$REPO_DIR/pizzaria-app"
+# Use 'docker-compose' with a hyphen, which is more compatible
 docker-compose up -d --build --force-recreate
 
-# --- Parte 4: Configuração do Crontab ---
-
-echo "Configurando o crontab para rodar o deploy a cada 5 minutos..."
-CRON_JOB="*/5 * * * * cd $/home/aluno/proway-docker/proway-docker && docker compose up -d --build --force-recreate"
+# Crontab Configuration
+echo "Configuring crontab to run the deploy every 5 minutes..."
+# Complete path without syntax error
+CRON_JOB="*/5 * * * * cd $REPO_DIR/pizzaria-app && /usr/local/bin/docker-compose up -d --build --force-recreate"
 (crontab -l 2>/dev/null | grep -Fv "$CRON_JOB"; echo "$CRON_JOB") | crontab -
 
-echo "Deploy finalizado. O sistema será atualizado automaticamente a cada 5 minutos."
+echo "Deployment finished. The system will be updated automatically every 5 minutes."
