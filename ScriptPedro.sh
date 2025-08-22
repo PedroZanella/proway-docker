@@ -49,6 +49,7 @@ echo "Iniciando o deploy com Docker Compose..."
 # 'docker compose up' com --build força a reconstrução das imagens.
 # '--force-recreate' força a recriação dos containers, garantindo o deploy de novas versões.
 # '-d' executa em modo detached (segundo plano).
+cd "$REPO_DIR/pizzaria-app"
 docker-compose up -d --build --force-recreate
 
 # --- Parte 4: Configuração do Crontab ---
