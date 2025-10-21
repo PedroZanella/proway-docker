@@ -7,3 +7,5 @@ jobs:
  
  steps:
  - name: checagem
+   run: |
+    echo "Fazendo a checagem"
