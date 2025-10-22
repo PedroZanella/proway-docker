@@ -6,6 +6,10 @@ jobs:
  runs-on: ubuntu-latest
  
  steps:
- - name: checagem
+ - uses: actions/checkout@v4
+ - name: build
+ run: |
+   ls -la 
+  - name: checagem
    run: |
-    echo "Fazendo a checagem"
+     echo "Fazendo a checagem"
